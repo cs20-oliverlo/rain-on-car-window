@@ -1,0 +1,15 @@
+body {
+  font-size: 13px;
+  color: white;
+  text-align: center;
+  background: black;
+  margin-top: 50px;
+}
+
+h1 {
+  color: rgb(255, 255, 255);
+}
+
+#my-canvas {
+  border: 1px solid white;
+}
