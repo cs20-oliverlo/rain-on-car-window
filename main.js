@@ -5,7 +5,7 @@ cnv.width = 1080;
 cnv.height = 600;
 
 // Global Variables
-let numOfRaindrops = randomInt(0,0);
+let numOfRaindrops = randomInt(0, 0);
 
 let player1 = {
   x: randomDec(0, cnv.width),
@@ -21,11 +21,17 @@ let player2 = {
   xSpeed: 0
 };
 
-
 let raindrops = [];
 for (let i = 0; i < numOfRaindrops; i++) {
   newRaindrop();
 }
+
+// Controls
+let keyA = false;
+let keyD = false;
+let arrowLeft = false;
+let arrowRight = false;
+
 
 // Update the Number of raindropss
 function checkDrops() {
@@ -52,23 +58,35 @@ function drawAnimation() {
 
 // EVENT STUFF
 document.addEventListener("keydown", keydownHandler);
-
-function mouseupHandler() {
-  mouseIsPressed = false;
-}
+document.addEventListener("keyup", keyupHandler);
 
 function keydownHandler(event) {
   if (event.code === "KeyA") {
-
+    keyA = true;
   }
   if (event.code === "KeyD") {
-
+    keyD = true;
   }
   if (event.code === "ArrowLeft") {
-    
+    arrowLeft = true;
   }
   if (event.code === "ArrowRight") {
+    arrowRight = true;
+  }
+}
 
+function keyupHandler(event) {
+   if (event.code === "KeyA") {
+    keyA = false;
+  }
+  if (event.code === "KeyD") {
+    keyD = false;
+  }
+  if (event.code === "ArrowLeft") {
+    arrowLeft = false;;
+  }
+  if (event.code === "ArrowRight") {
+    arrowRight = false;
   }
 }
 
@@ -85,7 +103,11 @@ function keydownHandler(event) {
       jumpTimer: 0,
       jumpGoal: randomDec(90, 121),
       xSpeed: randomDec(-3, 4),
-      ySpeed: randomDec(4, 8)
+      ySpeed: randomDec(4, 8),
+      xSpeedMax: 3,
+      xSpeedMin: -3,
+      ySpeedMax: 7,
+      ySpeedMin: 0
       }
     );
   }
@@ -122,11 +144,15 @@ function keydownHandler(event) {
       drops(player1, -1);
 
       // Move players
-      player1.x += playerMovement();
+      movePlayer();
+      player1.x += player1.xSpeed;
       player1.y += player1.rad;
 
       // Teleport players!
       teleport(player1, -1);
+
+      // Player Max Speed
+      maxSpeed(-1);
     }
     
     // Draw raindrops (players and raindrops)
@@ -144,12 +170,23 @@ function keydownHandler(event) {
       }
     }
 
-    function playerMovement() {
-      if () {
-        return player1.rad
+    // Player Movement
+    function movePlayer() {
+      if (keyA === true) {
+        player1.xSpeed += -5 / player1.rad;
+      } else if (player1.xSpeed < 0) {
+        player1.xSpeed -= -player1.rad / 50;
       }
-      if () {
-        return -player1.rad
+      if (keyD === true) {
+        player1.xSpeed += 5 / player1.rad;
+      } else if (player1.xSpeed > 0) {
+        player1.xSpeed -= player1.rad / 50;
+      }
+      if (arrowLeft === true) {
+
+      }
+      if (arrowRight === true) {
+
       }
     }
 
@@ -164,9 +201,12 @@ function keydownHandler(event) {
           variable[num].y = -20;
         }
       } else if (num = -1) {
-        if (variable.x < -50 || variable.x > cnv.width + 50 || variable.y > cnv.height + 15) {
-          variable.y = -20;
-        } else if (variable.y < -25) {
+        if (variable.x > cnv.width + 25) {
+          variable.x = 0;
+        } else if (variable.x < - 25) {
+          variable.x = cnv.width;
+        }
+        if (variable.y > cnv.height) {
           variable.y = -20;
         }
       }
@@ -195,16 +235,28 @@ function keydownHandler(event) {
 
     // Raindrop Max Speed
     function maxSpeed(num) {
-      if (raindrops[num].xSpeed > 3) {
-        raindrops[num].xSpeed = 3;
+      if (num === 1) {
+        // Raindrop
+        if (raindrops[num].xSpeed > raindrops[num].xSpeedMax) {
+          raindrops[num].xSpeed = raindrops[num].xSpeedMax;
+        }
+        if (raindrops[num].ySpeed > raindrops[num].ySpeedMax) {
+          raindrops[num].ySpeed = raindrops[num].ySpeedMax;
+        }
+        if (raindrops[num].xSpeed < raindrops[num].xSpeedMin) {
+          raindrops[num].xSpeed = raindrops[num].xSpeedMin;
+        }
+        if (raindrops[num].ySpeed < raindrops[num].ySpeedMin) {
+          raindrops[num].ySpeed = 1;
+        }
       }
-      if (raindrops[num].ySpeed > 7) {
-        raindrops[num].ySpeed = 7;
-      }
-      if (raindrops[num].xSpeed < -3) {
-        raindrops[num].xSpeed = -3;
-      }
-      if (raindrops[num].ySpeed < 0) {
-        raindrops[num].ySpeed = 1;
+      if (num === -1) {
+        // Players
+        if (player1.xSpeed > player1.rad / 2) {
+          player1.xSpeed = player1.rad / 2;
+        }
+        if (player1.xSpeed < -player1.rad / 2) {
+          player1.xSpeed = -player1.rad /2;
+        }
       }
     }
