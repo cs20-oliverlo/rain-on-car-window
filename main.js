@@ -5,7 +5,7 @@ cnv.width = 1080;
 cnv.height = 600;
 
 // Global Variables
-let numOfRaindrops = randomInt(10, 11);
+let numOfRaindrops = randomInt(100, 100);
 
 let player = [{
   x: randomDec(0, cnv.width),
@@ -18,7 +18,9 @@ let player = [{
   x: randomDec(0, cnv.width),
   y: 0,
   rad: randomDec(5, 11),
-  xSpeed: 0
+  xSpeed: 0,
+  xSpeedResetTimer: 0,
+  xSpeedResetGoal: 45
 }];
 
 let raindrops = [];
@@ -47,7 +49,7 @@ function checkDrops() {
 requestAnimationFrame(drawAnimation);
 function drawAnimation() {
   // Clear Canvas
-  ctx.clearRect(0, 0, cnv.width, cnv.height);
+  // ctx.clearRect(0, 0, cnv.width, cnv.height);
 
   drawRaindrops();
   drawPlayers();
@@ -99,9 +101,9 @@ function keyupHandler(event) {
       y: randomDec(0, cnv.height),
       rad: randomDec(5, 11),
       stopTimer: randomDec(0, 301),
-      stopGoal: randomDec(180, 301),
+      stopGoal: randomDec(300, 480),
       jumpTimer: 0,
-      jumpGoal: randomDec(90, 121),
+      jumpGoal: randomDec(300, 480),
       xSpeed: randomDec(-3, 4),
       ySpeed: randomDec(4, 8),
       xSpeedMax: 3,
@@ -134,7 +136,7 @@ function keyupHandler(event) {
         raindropTimers(i);
     
         // Max Speed
-        maxSpeed(i);
+        maxSpeed(raindrops, i);
       }
     }
 
@@ -142,13 +144,15 @@ function keyupHandler(event) {
     function drawPlayers() {
       // Draw players
       for (let i = 0; i < player.length; i++) {
-        drops(player, [0]);
+        drops(player, i);
       }
 
       // Move players
       movePlayer();
-      player[0].x += player[0].xSpeed;
-      player[0].y += player[0].rad;
+      for (let i = 0; i < player.length; i++) {
+        player[i].x += player[i].xSpeed;
+        player[i].y += player[i].rad;
+      }
 
       // Teleport players!
       for (let i = 0; i < player.length; i++) {
@@ -156,15 +160,18 @@ function keyupHandler(event) {
       }
 
       // Player Max Speed
-      maxSpeed(-1);
+      for (let i = 0; i < player.length; i++) {
+       maxSpeed(player, i);
+      }
 
-      console.log(player[0].xSpeed)
+      // console.log(player[0].xSpeed)
+      console.log(player[1].xSpeed)
     }
     
     // Draw raindrops (players and raindrops)
     function drops(variable, num) {
       if (variable === raindrops) {
-        ctx.fillStyle = `aqua`;
+        ctx.fillStyle = `rgb(${randomInt(0, 255)}, ${randomInt(0, 255)}, ${randomInt(0, 255)})`;
         ctx.beginPath();
         ctx.arc(variable[num].x, variable[num].y, variable[num].rad, 0, 2 * Math.PI);
         ctx.fill();
@@ -179,11 +186,14 @@ function keyupHandler(event) {
 
     // Player Movement
     function movePlayer() {
+      // Player 1 Movement (acceleration and deacceleration)
       if (keyA === true) {
         player[0].xSpeed += -5 / player[0].rad;
+        player[0].xSpeedResetTimer = 0;
       }
       if (keyD === true) {
         player[0].xSpeed += 5 / player[0].rad;
+        player[0].xSpeedResetTimer = 0;
       }
 
       if (keyA !== true && keyD !== true && player[0].xSpeed !== 0) {
@@ -200,11 +210,26 @@ function keyupHandler(event) {
         }
       }
 
+      // Player 2 Movement (acceleration and deacceleration)
       if (arrowLeft === true) {
-
+        player[1].xSpeed += -5 / player[1].rad;
       }
       if (arrowRight === true) {
+        player[1].xSpeed += 5 / player[1].rad;
+      }
 
+      if (arrowLeft !== true && arrowRight !== true && player[1].xSpeed !== 0) {
+        if (player[1].xSpeed < 0) {
+          player[1].xSpeed -= -player[1].rad / 50;
+          player[1].xSpeedResetTimer++;
+        } else if (player[1].xSpeed > 0) {
+          player[1].xSpeed -= player[1].rad / 50;
+          player[1].xSpeedResetTimer++;
+        }
+        if (player[1].xSpeedResetTimer === player[1].xSpeedResetGoal) {
+          player[1].xSpeedResetTimer = 0;
+          player[1].xSpeed = 0;
+        }
       }
     }
 
@@ -246,40 +271,39 @@ function keyupHandler(event) {
         if (raindrops[num].stopTimer > raindrops[num].stopGoal + randomDec(15, 21)) {
           raindrops[num].x += randomDec(-1, 2) * 5;
           raindrops[num].stopTimer = randomDec(0, 31);
-          raindrops[num].stopGoal = randomDec(180, 301);
+          raindrops[num].stopGoal = randomDec(300, 480);
         }
         if (raindrops[num].jumpTimer > raindrops[num].jumpGoal) {
           raindrops[num].xSpeed += randomDec(-5, 6);
           raindrops[num].ySpeed += randomDec(0, 8);
           raindrops[num].jumpTimer = randomDec(0, 31);
-          raindrops[num].jumpGoal = randomDec(90, 121);
+          raindrops[num].jumpGoal = randomDec(300, 480);
         }
     }
 
     // Raindrop Max Speed
-    function maxSpeed(num) {
-      if (num >= 0) {
+    function maxSpeed(variable, num) {
+      if (variable === raindrops) {
         // Raindrop
-        if (raindrops[num].xSpeed > raindrops[num].xSpeedMax) {
-          raindrops[num].xSpeed = raindrops[num].xSpeedMax;
+        if (variable[num].xSpeed > variable[num].xSpeedMax) {
+          variable[num].xSpeed = variable[num].xSpeedMax;
         }
-        if (raindrops[num].ySpeed > raindrops[num].ySpeedMax) {
-          raindrops[num].ySpeed = raindrops[num].ySpeedMax;
+        if (variable[num].ySpeed > variable[num].ySpeedMax) {
+          variable[num].ySpeed = variable[num].ySpeedMax;
         }
-        if (raindrops[num].xSpeed < raindrops[num].xSpeedMin) {
-          raindrops[num].xSpeed = raindrops[num].xSpeedMin;
+        if (variable[num].xSpeed < variable[num].xSpeedMin) {
+          variable[num].xSpeed = variable[num].xSpeedMin;
         }
-        if (raindrops[num].ySpeed < raindrops[num].ySpeedMin) {
-          raindrops[num].ySpeed = 1;
+        if (variable[num].ySpeed < variable[num].ySpeedMin) {
+          variable[num].ySpeed = 1;
         }
-      }
-      if (num === -1) {
+      } else if (variable === player) {
         // Players
-        if (player[0].xSpeed > player[0].rad / 2) {
-          player[0].xSpeed = player[0].rad / 2;
+        if (variable[num].xSpeed > variable[num].rad / 2) {
+          variable[num].xSpeed = variable[num].rad / 2;
         }
-        if (player[0].xSpeed < -player[0].rad / 2) {
-          player[0].xSpeed = -player[0].rad /2;
+        if (variable[num].xSpeed < -variable[num].rad / 2) {
+          variable[num].xSpeed = -variable[num].rad /2;
         }
       }
     }
