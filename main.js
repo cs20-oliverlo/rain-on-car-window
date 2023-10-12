@@ -7,23 +7,23 @@ cnv.height = 600;
 // Global Variables
 let numOfRaindrops = randomInt(100, 100);
 
-let player = [{
-  x: randomDec(0, cnv.width),
-  y: 0,
-  rad: randomInt(5, 11),
-  xSpeed: 0,
-  xSpeedResetTimer: 0,
-  xSpeedResetGoal: 45
-}, {
-  x: randomDec(0, cnv.width),
-  y: 0,
-  rad: randomDec(5, 11),
-  xSpeed: 0,
-  xSpeedResetTimer: 0,
-  xSpeedResetGoal: 45
-}];
+let player = [];
+  for (let i = 0; i < 2; i++) {
+    newPlayer();
+  }
 
-let raindrops = [];
+function newPlayer() {
+  player.push({
+    x: randomDec(0, cnv.width),
+    y: 0,
+    rad: randomDec(5, 11),
+    xSpeed: 0,
+    xSpeedResetTimer: 0,
+    xSpeedResetGoal: 45
+  });
+}
+
+let raindropsArray = [];
 for (let i = 0; i < numOfRaindrops; i++) {
   newRaindrop();
 }
@@ -37,10 +37,10 @@ let arrowRight = false;
 
 // Update the Number of raindropss
 function checkDrops() {
-  if (raindrops.length < numOfRaindrops) {
+  if (raindropsArray.length < numOfRaindrops) {
     newRaindrop();
-  } else if (raindrops.length > numOfRaindrops) {
-    raindrops.pop();
+  } else if (raindropsArray.length > numOfRaindrops) {
+    raindropsArray.pop();
   }
 }
 
@@ -51,8 +51,8 @@ function drawAnimation() {
   // Clear Canvas
   // ctx.clearRect(0, 0, cnv.width, cnv.height);
 
-  drawRaindrops();
-  drawPlayers();
+  raindrops();
+  players();
 
   // Request Animation Frame
   requestAnimationFrame(drawAnimation);
@@ -95,7 +95,7 @@ function keyupHandler(event) {
 // Helper Functions
   // Set Raindrops and Players
   function newRaindrop() {
-    raindrops.push(
+    raindropsArray.push(
       {
       x: randomDec(0, cnv.width),
       y: randomDec(0, cnv.height),
@@ -109,42 +109,44 @@ function keyupHandler(event) {
       xSpeedMax: 3,
       xSpeedMin: -3,
       ySpeedMax: 7,
-      ySpeedMin: 0
+      ySpeedMin: 0,
+      pulse: 0,
+      pulse2: 0
       }
     );
   }
 
   // Drawing Stuff
-    // Raindrops
-    function drawRaindrops() {
-      for (let i = 0; i < raindrops.length; i++) {
+    // raindropsArray
+    function raindrops() {
+      for (let i = 0; i < raindropsArray.length; i++) {
         // Draw raindrops
-        drops(raindrops, i);
+        drawDrops(raindropsArray, i);
 
         // Move raindrops
-        raindrops[i].x += raindrops[i].xSpeed;
-        raindrops[i].y += raindrops[i].ySpeed;
+        raindropsArray[i].x += raindropsArray[i].xSpeed;
+        raindropsArray[i].y += raindropsArray[i].ySpeed;
     
         // Teleport dropsies!
-        teleport(raindrops, i);
+        teleport(raindropsArray, i);
     
         // Flutteryness (adds some spice)
-        raindrops[i].xSpeed += randomDec(-1, 1);
-        raindrops[i].ySpeed += randomDec(-2, 3);
+        raindropsArray[i].xSpeed += randomDec(-1, 1);
+        raindropsArray[i].ySpeed += randomDec(-2, 3);
     
         // Stop & Jump Timers
-        raindropTimers(i);
+        // raindropTimers(i);
     
         // Max Speed
-        maxSpeed(raindrops, i);
+        maxSpeed(raindropsArray, i);
       }
     }
 
     // Draw Players
-    function drawPlayers() {
+    function players() {
       // Draw players
       for (let i = 0; i < player.length; i++) {
-        drops(player, i);
+        drawDrops(player, i);
       }
 
       // Move players
@@ -165,17 +167,32 @@ function keyupHandler(event) {
       }
 
       // console.log(player[0].xSpeed)
-      console.log(player[1].xSpeed)
+      console.log(player[0].xSpeed, player[1].xSpeed)
     }
     
     // Draw raindrops (players and raindrops)
-    function drops(variable, num) {
-      if (variable === raindrops) {
-        ctx.fillStyle = `rgb(${randomInt(0, 255)}, ${randomInt(0, 255)}, ${randomInt(0, 255)})`;
-        ctx.beginPath();
-        ctx.arc(variable[num].x, variable[num].y, variable[num].rad, 0, 2 * Math.PI);
-        ctx.fill();
+    function drawDrops(variable, num) {
+      if (raindropsArray[num].pulse2 <= 255) {
+        if (variable === raindropsArray) {
+          ctx.fillStyle = `rgb(${raindropsArray[num].pulse++}, ${raindropsArray[num].pulse++}, ${raindropsArray[num].pulse})`;
+          ctx.beginPath();
+          ctx.arc(variable[num].x, variable[num].y, variable[num].rad, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+        raindropsArray[num].pulse2++;
+      } else if (raindropsArray[num].pulse2 <= 510) {
+        if (variable === raindropsArray) {
+          ctx.fillStyle = `rgb(${raindropsArray[num].pulse--}, ${raindropsArray[num].pulse--}, ${raindropsArray[num].pulse})`;
+          ctx.beginPath();
+          ctx.arc(variable[num].x, variable[num].y, variable[num].rad, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+        raindropsArray[num].pulse2++;
+      } else {
+        raindropsArray[num].pulse2 = 0;
       }
+
+
       if (variable === player) {
         ctx.fillStyle = `red`;
         ctx.beginPath();
@@ -235,7 +252,7 @@ function keyupHandler(event) {
 
     // Teleport raindrops
     function teleport(variable, num) {
-      if (variable === raindrops) {
+      if (variable === raindropsArray) {
         if (variable[num].x > cnv.width + 25) {
           variable[num].x = 0;
         } else if (variable[num].x < -25) {
@@ -262,28 +279,29 @@ function keyupHandler(event) {
 
     // Raindrop Timers
     function raindropTimers(num) {
-      raindrops[num].stopTimer++;
-        raindrops[num].jumpTimer++;
-        if (raindrops[num].stopTimer > raindrops[num].stopGoal) {
-          raindrops[num].xSpeed = 0;
-          raindrops[num].ySpeed = 0;
+      raindropsArray[num].stopTimer++;
+        raindropsArray[num].jumpTimer++;
+        if (raindropsArray[num].stopTimer > raindropsArray[num].stopGoal) {
+          raindropsArray[num].xSpeed = 0;
+          raindropsArray[num].ySpeed = 0;
         }
-        if (raindrops[num].stopTimer > raindrops[num].stopGoal + randomDec(15, 21)) {
-          raindrops[num].x += randomDec(-1, 2) * 5;
-          raindrops[num].stopTimer = randomDec(0, 31);
-          raindrops[num].stopGoal = randomDec(300, 480);
+        if (raindropsArray[num].stopTimer > raindropsArray[num].stopGoal + randomDec(15, 21)) {
+          raindropsArray[num].x += randomDec(-1, 1) * raindropsArray[num].rad;
+          raindropsArray[num].y += randomDec(-0.5, 0.5) * raindropsArray[num].rad;
+          raindropsArray[num].stopTimer = randomDec(0, 31);
+          raindropsArray[num].stopGoal = randomDec(300, 480);
         }
-        if (raindrops[num].jumpTimer > raindrops[num].jumpGoal) {
-          raindrops[num].xSpeed += randomDec(-5, 6);
-          raindrops[num].ySpeed += randomDec(0, 8);
-          raindrops[num].jumpTimer = randomDec(0, 31);
-          raindrops[num].jumpGoal = randomDec(300, 480);
+        if (raindropsArray[num].jumpTimer > raindropsArray[num].jumpGoal) {
+          raindropsArray[num].xSpeed += randomDec(-5, 6);
+          raindropsArray[num].ySpeed += randomDec(0, 8);
+          raindropsArray[num].jumpTimer = randomDec(0, 31);
+          raindropsArray[num].jumpGoal = randomDec(300, 480);
         }
     }
 
     // Raindrop Max Speed
     function maxSpeed(variable, num) {
-      if (variable === raindrops) {
+      if (variable === raindropsArray) {
         // Raindrop
         if (variable[num].xSpeed > variable[num].xSpeedMax) {
           variable[num].xSpeed = variable[num].xSpeedMax;
@@ -299,11 +317,11 @@ function keyupHandler(event) {
         }
       } else if (variable === player) {
         // Players
-        if (variable[num].xSpeed > variable[num].rad / 2) {
-          variable[num].xSpeed = variable[num].rad / 2;
+        if (variable[num].xSpeed > 30 / variable[num].rad) {
+          variable[num].xSpeed = 30 / variable[num].rad;
         }
-        if (variable[num].xSpeed < -variable[num].rad / 2) {
-          variable[num].xSpeed = -variable[num].rad /2;
+        if (variable[num].xSpeed < -30 / variable[num].rad) {
+          variable[num].xSpeed = -30 / variable[num].rad;
         }
       }
     }
