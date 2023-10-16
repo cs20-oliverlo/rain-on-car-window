@@ -1,11 +1,13 @@
 // Set up canvas and graphics context
 let cnv = document.getElementById("my-canvas");
 let ctx = cnv.getContext("2d");
-cnv.width = 1080;
-cnv.height = 600;
+let carWindowImg = document.getElementById("car-window-img");
+let carWindow2Img = document.getElementById("car-window2-img");
+cnv.width = 1100;
+cnv.height = 800;
 
 // Global Variables
-let numOfRaindrops = randomInt(10, 10);
+let numOfRaindrops = randomInt(100, 100);
 
 let player = [];
   for (let i = 0; i < 2; i++) {
@@ -23,6 +25,11 @@ function newPlayer() {
     xSpeedResetGoal: 45
   });
 }
+
+for (let i = 0; i < player.length; i++) {
+  player[i].ySpeed = player[i].rad / 2;
+}
+
 
 let raindropsArray = [];
 for (let i = 0; i < numOfRaindrops; i++) {
@@ -55,6 +62,9 @@ requestAnimationFrame(drawAnimation);
 function drawAnimation() {
   // Clear Canvas
   ctx.clearRect(0, 0, cnv.width, cnv.height);
+
+  // Car Window Image
+  ctx.drawImage(carWindow2Img, 0, 0, cnv.width, cnv.height);
 
   raindrops();
   players();
@@ -117,7 +127,7 @@ function keyupHandler(event) {
       x: randomDec(0, cnv.width),
       y: randomDec(0, cnv.height),
       rad: randomDec(5, 11),
-      stopTimer: randomDec(0, 301),
+      stopTimer: randomDec(0, 480),
       stopGoal: randomDec(300, 480),
       jumpTimer: 0,
       jumpGoal: randomDec(300, 480),
@@ -164,7 +174,7 @@ function keyupHandler(event) {
       drawDrops(player, i);
     }
 
-    // Controll players
+    // Control players
     controls();
 
     // Teleport players!
@@ -224,11 +234,11 @@ function keyupHandler(event) {
 
   // Player Controls
   function controls() {
-    movePlayer(0, keyA, keyD)
-    movePlayer(1, arrowLeft, arrowRight)
+    movePlayer(0, keyW, keyA, keyD, keyS)
+    movePlayer(1, ArrowUp, arrowLeft, arrowRight, arrowDown)
   }
 
-  function movePlayer(n, left, right) {
+  function movePlayer(n, up, left, right, down) {
     // Left and Rigth Acceleration
     if (left === true) {
       player[n].xSpeed += -5 / player[n].rad;
@@ -254,9 +264,14 @@ function keyupHandler(event) {
       }
     }
 
+    if (down === true) {
+      player[n].ySpeed += player[n].rad;
+      keyS = false;
+    }
+    console.log(keyS);
+
     // Downward Velocity
     for (let i = 0; i < player.length; i++) {
-      player[i].ySpeed = player[i].rad / 2;
       player[i].x += player[i].xSpeed / 2;
       player[i].y += player[i].ySpeed;
     }
@@ -297,7 +312,7 @@ function keyupHandler(event) {
         raindropsArray[n].xSpeed = 0;
         raindropsArray[n].ySpeed = 0;
       }
-      if (raindropsArray[n].stopTimer > raindropsArray[n].stopGoal + randomDec(15, 21)) {
+      if (raindropsArray[n].stopTimer > raindropsArray[n].stopGoal + randomDec(300, 400)) {
         raindropsArray[n].stopTimer = randomDec(0, 31);
         raindropsArray[n].stopGoal = randomDec(300, 480);
       }
@@ -332,6 +347,9 @@ function keyupHandler(event) {
       }
       if (variable[n].xSpeed < -30 / variable[n].rad) {
         variable[n].xSpeed = -30 / variable[n].rad;
+      }
+      if (variable[n].ySpeed > variable[n].rad) {
+        variable[n].ySpeed = variable[n].rad
       }
     }
   }
