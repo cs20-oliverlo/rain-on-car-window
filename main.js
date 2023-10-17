@@ -22,12 +22,16 @@ function newPlayer() {
     xSpeed: 0,
     ySpeed: 0,
     xSpeedResetTimer: 0,
-    xSpeedResetGoal: 45
+    xSpeedResetGoal: 45,
+    dashLength: 0,
+    dashTimer: 0,
+    dashCooldown: 30
   });
 }
 
 for (let i = 0; i < player.length; i++) {
   player[i].ySpeed = player[i].rad / 2;
+  player[i].dashLength = 5 / player[i].rad;
 }
 
 
@@ -41,10 +45,10 @@ let keyW = false;
 let keyA = false;
 let keyD = false;
 let keyS = false;
-let ArrowUp = false;
-let arrowLeft = false;
-let arrowRight = false;
-let arrowDown = false;
+let keyI = false;
+let keyJ = false;
+let keyL = false;
+let keyK = false;
 
 
 // Update the Number of raindropss
@@ -56,15 +60,17 @@ function checkDrops() {
   }
 }
 
+ctx.drawImage(carWindow2Img, 0, 0, cnv.width, cnv.height);
+
 
 // Animation
 requestAnimationFrame(drawAnimation);
 function drawAnimation() {
   // Clear Canvas
-  ctx.clearRect(0, 0, cnv.width, cnv.height);
+  // ctx.clearRect(0, 0, cnv.width, cnv.height);
 
   // Car Window Image
-  ctx.drawImage(carWindow2Img, 0, 0, cnv.width, cnv.height);
+  // ctx.drawImage(carWindow2Img, 0, 0, cnv.width, cnv.height);
 
   raindrops();
   players();
@@ -90,32 +96,44 @@ function keydownHandler(event) {
   if (event.code === "KeyS") {
     keyS = true;
   }
-  if (event.code === "ArrowUp") {
-    arrouwUp = true;
+  if (event.code === "KeyI") {
+    keyI = true;
   }
-  if (event.code === "ArrowLeft") {
-    arrowLeft = true;
+  if (event.code === "KeyJ") {
+    keyJ = true;
   }
-  if (event.code === "ArrowRight") {
-    arrowRight = true;
+  if (event.code === "KeyL") {
+    keyL = true;
   }
-  if (event.code === "ArrowDown") {
-    arrowDown = true;
+  if (event.code === "KeyK") {
+    keyK = true;
   }
 }
 
 function keyupHandler(event) {
-   if (event.code === "KeyA") {
+  if (event.code === "KeyW") {
+    keyW = false;
+  }
+  if (event.code === "KeyA") {
     keyA = false;
   }
   if (event.code === "KeyD") {
     keyD = false;
   }
-  if (event.code === "ArrowLeft") {
-    arrowLeft = false;;
+  if (event.code === "KeyS") {
+    keyS = false;
   }
-  if (event.code === "ArrowRight") {
-    arrowRight = false;
+  if (event.code === "KeyI") {
+    keyI = false;
+  }
+  if (event.code === "KeyJ") {
+    keyJ = false;
+  }
+  if (event.code === "KeyL") {
+    keyL = false;
+  }
+  if (event.code === "KeyK") {
+    keyK = false;
   }
 }
 
@@ -225,7 +243,11 @@ function keyupHandler(event) {
     // }    
 
     if (variable === player) {
+      if (variable[n].dashTimer !== 0) {
       ctx.fillStyle = `red`;
+      } else {
+       ctx.fillStyle = `green`;
+      }
       ctx.beginPath();
       ctx.arc(variable[n].x, variable[n].y, variable[n].rad, 0, 2 * Math.PI);
       ctx.fill();
@@ -235,10 +257,19 @@ function keyupHandler(event) {
   // Player Controls
   function controls() {
     movePlayer(0, keyW, keyA, keyD, keyS)
-    movePlayer(1, ArrowUp, arrowLeft, arrowRight, arrowDown)
+    movePlayer(1, keyI, keyJ, keyL, keyK)
   }
 
   function movePlayer(n, up, left, right, down) {
+    // Comment
+    if (player[n].ySpeed > 0) {
+      if (up === true) {
+      player[n].ySpeed = 0;
+      }
+    } else if (player[n].ySpeed !== player[n].rad / 2) {
+      player[n].ySpeed += player[n].rad / 6;
+    }
+
     // Left and Rigth Acceleration
     if (left === true) {
       player[n].xSpeed += -5 / player[n].rad;
@@ -264,16 +295,31 @@ function keyupHandler(event) {
       }
     }
 
+    // Downward Dash and Cooldown
     if (down === true) {
-      player[n].ySpeed += player[n].rad;
-      keyS = false;
+      if (player[n].dashTimer === 0) {
+        player[n].ySpeed += player[n].rad;
+        player[n].dashTimer = player[n].dashCooldown;
+      }
     }
-    console.log(keyS);
+
+    player[n].dashTimer -= 0.5;
+    if (player[n].dashTimer <= 0) {
+      player[n].dashTimer = 0;
+    }
+
+
 
     // Downward Velocity
     for (let i = 0; i < player.length; i++) {
       player[i].x += player[i].xSpeed / 2;
       player[i].y += player[i].ySpeed;
+      if (player[i].ySpeed > player[i].rad / 2) {
+        player[i].ySpeed -= 0.5;
+      }
+      if (player[i].ySpeed < player[i].rad / 2) {
+        player[i].ySpeed += 0.5;
+      }
     }
   }
 
@@ -347,6 +393,9 @@ function keyupHandler(event) {
       }
       if (variable[n].xSpeed < -30 / variable[n].rad) {
         variable[n].xSpeed = -30 / variable[n].rad;
+      }
+      if (variable[n].ySpeed <= 2) {
+        variable[n].ySpeed = 0
       }
       if (variable[n].ySpeed > variable[n].rad) {
         variable[n].ySpeed = variable[n].rad
