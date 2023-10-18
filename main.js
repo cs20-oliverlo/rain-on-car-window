@@ -21,8 +21,14 @@ function newPlayer() {
     rad: randomDec(5, 11),
     xSpeed: 0,
     ySpeed: 0,
+    xAccel: 0,
+    yAccel: 0,
     xSpeedResetTimer: 0,
     xSpeedResetGoal: 45,
+    up: false,
+    left: false,
+    right: false,
+    down: false,
     dashLength: 0,
     dashTimer: 0,
     dashCooldown: 30
@@ -30,7 +36,9 @@ function newPlayer() {
 }
 
 for (let i = 0; i < player.length; i++) {
-  player[i].ySpeed = player[i].rad / 2;
+  player[i].ySpeed = player[i].rad / 4;
+  player[i].xAccel = player[i].rad;
+  player[i].yAccel = player[i].rad;
   player[i].dashLength = 5 / player[i].rad;
 }
 
@@ -39,17 +47,6 @@ let raindropsArray = [];
 for (let i = 0; i < numOfRaindrops; i++) {
   newRaindrop();
 }
-
-// Controls
-let keyW = false;
-let keyA = false;
-let keyD = false;
-let keyS = false;
-let keyI = false;
-let keyJ = false;
-let keyL = false;
-let keyK = false;
-
 
 // Update the Number of raindropss
 function checkDrops() {
@@ -70,7 +67,7 @@ function drawAnimation() {
   // ctx.clearRect(0, 0, cnv.width, cnv.height);
 
   // Car Window Image
-  // ctx.drawImage(carWindow2Img, 0, 0, cnv.width, cnv.height);
+  ctx.drawImage(carWindow2Img, 0, 0, cnv.width, cnv.height);
 
   raindrops();
   players();
@@ -85,55 +82,55 @@ document.addEventListener("keyup", keyupHandler);
 
 function keydownHandler(event) {
   if (event.code === "KeyW") {
-    keyW = true;
+    player[0].up = true;
   }
   if (event.code === "KeyA") {
-    keyA = true;
+    player[0].left = true;
   }
   if (event.code === "KeyD") {
-    keyD = true;
+    player[0].right = true;
   }
   if (event.code === "KeyS") {
-    keyS = true;
+    player[0].down = true;
   }
   if (event.code === "KeyI") {
-    keyI = true;
+    player[1].up = true;
   }
   if (event.code === "KeyJ") {
-    keyJ = true;
+    player[1].left = true;
   }
   if (event.code === "KeyL") {
-    keyL = true;
+    player[1].right = true;
   }
   if (event.code === "KeyK") {
-    keyK = true;
+    player[1].down = true;
   }
 }
 
 function keyupHandler(event) {
   if (event.code === "KeyW") {
-    keyW = false;
+    player[0].up = false;
   }
   if (event.code === "KeyA") {
-    keyA = false;
+    player[0].left = false;
   }
   if (event.code === "KeyD") {
-    keyD = false;
+    player[0].right = false;
   }
   if (event.code === "KeyS") {
-    keyS = false;
+    player[0].down = false;
   }
   if (event.code === "KeyI") {
-    keyI = false;
+    player[1].up = false;
   }
   if (event.code === "KeyJ") {
-    keyJ = false;
+    player[1].left = false;
   }
   if (event.code === "KeyL") {
-    keyL = false;
+    player[1].right = false;
   }
   if (event.code === "KeyK") {
-    keyK = false;
+    player[1].down = false;
   }
 }
 
@@ -155,7 +152,7 @@ function keyupHandler(event) {
       xSpeedMin: -3,
       ySpeedMax: 7,
       ySpeedMin: 0,
-      pulse: 10,
+      pulse: 0,
       pulse2: 0
       }
     );
@@ -187,25 +184,19 @@ function keyupHandler(event) {
   }
 
   function players() {
-    // Draw players
     for (let i = 0; i < player.length; i++) {
+      // Draw Players
       drawDrops(player, i);
-    }
 
-    // Control players
-    controls();
+      // Control Players
+      movePlayer();
 
-    // Teleport players!
-    for (let i = 0; i < player.length; i++) {
+      // Teleport Players
       teleport(player, i);
-    }
 
-    // Player Max Speed
-    for (let i = 0; i < player.length; i++) {
+      // Player Max Speed
       maxSpeed(player, i);
     }
-
-
 
     // console.log(player[0].xSpeed)
     // console.log(player[0].xSpeed, player[1].xSpeed)
@@ -214,7 +205,7 @@ function keyupHandler(event) {
   // Draw raindrops (players and raindrops)
   function drawDrops(variable, n) {
     // Pulse thing (looks nice but likely to be removed)
-    if (raindropsArray[n].pulse2 <= 200) {
+    if (raindropsArray[n].pulse2 <= 255) {
       if (variable === raindropsArray) {
         ctx.fillStyle = `rgb(${raindropsArray[n].pulse++}, ${raindropsArray[n].pulse++}, ${raindropsArray[n].pulse})`;
         ctx.beginPath();
@@ -222,7 +213,7 @@ function keyupHandler(event) {
         ctx.fill();
       }
       raindropsArray[n].pulse2++;
-    } else if (raindropsArray[n].pulse2 <= 400) {
+    } else if (raindropsArray[n].pulse2 <= 511) {
       if (variable === raindropsArray) {
         ctx.fillStyle = `rgb(${raindropsArray[n].pulse--}, ${raindropsArray[n].pulse--}, ${raindropsArray[n].pulse})`;
         ctx.beginPath();
@@ -254,39 +245,51 @@ function keyupHandler(event) {
     }
   }
 
-  // Player Controls
-  function controls() {
-    movePlayer(0, keyW, keyA, keyD, keyS)
-    movePlayer(1, keyI, keyJ, keyL, keyK)
+  function movePlayer() {
+    for (let i = 0; i < player.length; i++) {
+      // Up Movement
+      upMovement(i);
+
+      // Left and Right Movement
+      leftRightMovement(i);
+
+      // Down Movement
+      downMovement(i);
+
+      // Updating x and y values
+      player[i].x += player[i].xSpeed;
+      player[i].y += player[i].ySpeed;
+    }
   }
 
-  function movePlayer(n, up, left, right, down) {
-    // Comment
-    if (player[n].ySpeed > 0) {
-      if (up === true) {
+  // Upwards Movement (Stop)
+  function upMovement(n) {
+    if (player[n].up === true) {
       player[n].ySpeed = 0;
-      }
-    } else if (player[n].ySpeed !== player[n].rad / 2) {
+      } else {
       player[n].ySpeed += player[n].rad / 6;
-    }
+      }
+  }
 
+  // Left and Right Movement
+  function leftRightMovement (n) {
     // Left and Rigth Acceleration
-    if (left === true) {
-      player[n].xSpeed += -5 / player[n].rad;
+    if (player[n].left === true) {
+      player[n].xSpeed += -5 / player[n].xAccel;
       player[n].xSpeedResetTimer = 0;
     }
-    if (right === true) {
-      player[n].xSpeed += 5 / player[n].rad;
+    if (player[n].right === true) {
+      player[n].xSpeed += 5 / player[n].xAccel;
       player[n].xSpeedResetTimer = 0;
     }
 
     // Left and Right Deacceleration
-    if (left !== true && right !== true && player[n].xSpeed !== 0) {
+    if (player[n].left !== true && player[n].right !== true && player[n].xSpeed !== 0) {
       if (player[n].xSpeed < 0) {
-        player[n].xSpeed -= -player[n].rad / 50;
+        player[n].xSpeed -= -player[n].xAccel / 50;
         player[n].xSpeedResetTimer++;
       } else if (player[n].xSpeed > 0) {
-        player[n].xSpeed -= player[n].rad / 50;
+        player[n].xSpeed -= player[n].xAccel / 50;
         player[n].xSpeedResetTimer++;
       }
       if (player[n].xSpeedResetTimer === player[n].xSpeedResetGoal) {
@@ -294,9 +297,11 @@ function keyupHandler(event) {
         player[n].xSpeed = 0;
       }
     }
+  }
 
-    // Downward Dash and Cooldown
-    if (down === true) {
+  // Downwards Movement (dash)
+  function downMovement(n) {
+    if (player[n].down === true) {
       if (player[n].dashTimer === 0) {
         player[n].ySpeed += player[n].rad;
         player[n].dashTimer = player[n].dashCooldown;
@@ -308,19 +313,6 @@ function keyupHandler(event) {
       player[n].dashTimer = 0;
     }
 
-
-
-    // Downward Velocity
-    for (let i = 0; i < player.length; i++) {
-      player[i].x += player[i].xSpeed / 2;
-      player[i].y += player[i].ySpeed;
-      if (player[i].ySpeed > player[i].rad / 2) {
-        player[i].ySpeed -= 0.5;
-      }
-      if (player[i].ySpeed < player[i].rad / 2) {
-        player[i].ySpeed += 0.5;
-      }
-    }
   }
 
   // Teleport raindrops
@@ -394,11 +386,8 @@ function keyupHandler(event) {
       if (variable[n].xSpeed < -30 / variable[n].rad) {
         variable[n].xSpeed = -30 / variable[n].rad;
       }
-      if (variable[n].ySpeed <= 2) {
-        variable[n].ySpeed = 0
-      }
-      if (variable[n].ySpeed > variable[n].rad) {
-        variable[n].ySpeed = variable[n].rad
+      if (variable[n].ySpeed > variable[n].rad / 4) {
+        variable[n].ySpeed = variable[n].rad / 4;
       }
     }
   }
