@@ -265,7 +265,7 @@ function keyupHandler(event) {
   // Upwards Movement (Stop)
   function upMovement(n) {
     if (player[n].up === true) {
-      player[n].ySpeed = 0;
+      player[n].ySpeed = player[n].rad / 6;
       } else {
       player[n].ySpeed += player[n].rad / 6;
       }
